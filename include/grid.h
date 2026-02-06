@@ -14,8 +14,12 @@ typedef struct {
     Case cases[LARGEUR_GRILLE][HAUTEUR_GRILLE];
 } Grille;
 
-/* Fonctions de gestion de la grille */
+/* Initialisation et gestion de la grille */
 void initialiser_grille(Grille *grille);
 void marquer_case(Grille *grille, int x, int y, int id_joueur);
+
+/* Scores */
+int compter_cases_joueur(const Grille *grille, int id_joueur);
+void afficher_scores(const Grille *grille, int nombre_joueurs);
 
 #endif

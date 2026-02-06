@@ -1,5 +1,6 @@
 #include "engine.h"
 #include "actions.h"
+#include "grid.h"
 #include <stdio.h>
 
 static int deplacement_x(Action action)
@@ -67,4 +68,5 @@ void lancer_partie(Joueur joueurs[], int nombre_joueurs)
     }
 
     printf("Partie terminée.\n");
+    afficher_scores(&grille, nombre_joueurs);
 }
