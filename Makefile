@@ -2,24 +2,22 @@
 # Projet Splash – S6
 # =========================
 
-# Compilateur
 CC = gcc
 
-# Options de compilation
-CFLAGS  = -Wall -Wextra -std=c11 -Iinclude
-LDFLAGS = -ldl
+CFLAGS   = -Wall -Wextra -std=c11 -Iinclude
+LDFLAGS  = -ldl
+SDLFLAGS = $(shell sdl2-config --cflags --libs)
 
-# Dossiers
 SRC_DIR    = src
 INC_DIR    = include
 PLAYER_DIR = players
 
-# Exécutable
 TARGET = splash
 
 # =========================
 # Sources moteur
 # =========================
+
 SRC = \
 	$(SRC_DIR)/main.c \
 	$(SRC_DIR)/engine.c \
@@ -31,13 +29,20 @@ SRC = \
 OBJ = $(SRC:.c=.o)
 
 # =========================
-# Joueurs IA
+# Joueurs IA (4 fichiers distincts)
 # =========================
+
 PLAYER_SRC = \
-	$(PLAYER_DIR)/random_player.c
+	$(PLAYER_DIR)/random_player1.c \
+	$(PLAYER_DIR)/random_player2.c \
+	$(PLAYER_DIR)/random_player3.c \
+	$(PLAYER_DIR)/random_player4.c
 
 PLAYER_SO = \
-	$(PLAYER_DIR)/random_player.so
+	$(PLAYER_DIR)/random_player1.so \
+	$(PLAYER_DIR)/random_player2.so \
+	$(PLAYER_DIR)/random_player3.so \
+	$(PLAYER_DIR)/random_player4.so
 
 # =========================
 # Règles principales
@@ -45,27 +50,23 @@ PLAYER_SO = \
 
 all: $(TARGET) players
 
-# Exécutable principal
 $(TARGET): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS) $(SDLFLAGS)
 
-# Compilation des objets
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # =========================
-# Joueurs (.so)
+# Joueurs IA (.so)
 # =========================
 
 players: $(PLAYER_DIR) $(PLAYER_SO)
 
-# Crée le dossier players si absent
 $(PLAYER_DIR):
 	mkdir -p $(PLAYER_DIR)
 
-# Compilation d'un joueur IA
-$(PLAYER_DIR)/%.so: $(PLAYER_DIR)/%.c $(INC_DIR)/actions.h
-	$(CC) -Wall -Wextra -std=c11 -fPIC -shared -I$(INC_DIR) -o $@ $<
+$(PLAYER_DIR)/%.so: $(PLAYER_DIR)/%.c include/actions.h
+	$(CC) -Wall -Wextra -std=c11 -fPIC -shared -Iinclude -o $@ $<
 
 # =========================
 # Nettoyage
@@ -80,7 +81,4 @@ fclean: clean
 
 re: fclean all
 
-# =========================
-# Phony
-# =========================
 .PHONY: all clean fclean re players
