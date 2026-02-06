@@ -1,0 +1,12 @@
+# Fichiers compilés
+*.o
+*.so
+splash
+
+# Dossiers temporaires
+build/
+
+# Fichiers perso
+token.txt
+
+
