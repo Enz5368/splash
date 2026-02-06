@@ -2,33 +2,41 @@
 # Projet Splash – S6
 # =========================
 
-# Compilateur et options
-CC      = gcc
+# Compilateur
+CC = gcc
+
+# Options de compilation
 CFLAGS  = -Wall -Wextra -std=c11 -Iinclude
 LDFLAGS = -ldl
 
 # Dossiers
-SRC_DIR     = src
-PLAYER_DIR  = players
-BUILD_DIR   = build
+SRC_DIR    = src
+INC_DIR    = include
+PLAYER_DIR = players
 
 # Exécutable
 TARGET = splash
 
-# Fichiers source moteur
+# =========================
+# Sources moteur
+# =========================
 SRC = \
 	$(SRC_DIR)/main.c \
 	$(SRC_DIR)/engine.c \
 	$(SRC_DIR)/actions.c \
 	$(SRC_DIR)/grid.c \
 	$(SRC_DIR)/loader.c \
-	$(SRC_DIR)/render.c 
+	$(SRC_DIR)/render.c
 
-# Objets
 OBJ = $(SRC:.c=.o)
 
-# Joueurs IA (bibliothèques dynamiques)
-PLAYERS = \
+# =========================
+# Joueurs IA
+# =========================
+PLAYER_SRC = \
+	$(PLAYER_DIR)/random_player.c
+
+PLAYER_SO = \
 	$(PLAYER_DIR)/random_player.so
 
 # =========================
@@ -37,21 +45,27 @@ PLAYERS = \
 
 all: $(TARGET) players
 
+# Exécutable principal
 $(TARGET): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-# Compilation des .o
+# Compilation des objets
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # =========================
-# Joueurs IA (.so)
+# Joueurs (.so)
 # =========================
 
-players: $(PLAYERS)
+players: $(PLAYER_DIR) $(PLAYER_SO)
 
-$(PLAYER_DIR)/%.so: $(PLAYER_DIR)/%.c include/actions.h
-	$(CC) -Wall -Wextra -std=c11 -fPIC -shared -o $@ $<
+# Crée le dossier players si absent
+$(PLAYER_DIR):
+	mkdir -p $(PLAYER_DIR)
+
+# Compilation d'un joueur IA
+$(PLAYER_DIR)/%.so: $(PLAYER_DIR)/%.c $(INC_DIR)/actions.h
+	$(CC) -Wall -Wextra -std=c11 -fPIC -shared -I$(INC_DIR) -o $@ $<
 
 # =========================
 # Nettoyage
@@ -61,12 +75,12 @@ clean:
 	rm -f $(OBJ)
 
 fclean: clean
-	rm -f $(TARGET) $(PLAYER_DIR)/*.so
+	rm -f $(TARGET)
+	rm -f $(PLAYER_DIR)/*.so
 
 re: fclean all
 
 # =========================
 # Phony
 # =========================
-
 .PHONY: all clean fclean re players
