@@ -1,6 +1,6 @@
 #include "actions.h"
 
-/* Retourne le coût d'une action */
+/* Retourne le coût d'une action        */
 int cout_action(Action action)
 {
     switch (action) {

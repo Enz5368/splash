@@ -1,7 +1,7 @@
 #ifndef ACTIONS_H
 #define ACTIONS_H
 
-/* Codes des actions possibles */
+/* Codes des actions possibles        */
 typedef enum {
     ACTION_DEPLACER_GAUCHE,
     ACTION_DEPLACER_DROITE,
