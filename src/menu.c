@@ -58,7 +58,7 @@ MenuResult lancer_menu(SDL_Renderer *renderer)
     }
 
     TTF_Font *font = TTF_OpenFont(
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20);
+        "include/DejaVuSans.ttf", 20);
 
     if (!font) {
         printf("Erreur chargement police\n");
