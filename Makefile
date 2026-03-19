@@ -15,16 +15,24 @@ SRCS = \
     $(SRC_DIR)/menu.c
 
 OBJS = $(SRCS:.c=.o)
-
 TARGET = splash
 
-all: $(TARGET)
+# --- Gestion des joueurs ---
+PLAYER_SRCS = $(wildcard players/*.c)
+PLAYER_SOS = $(PLAYER_SRCS:.c=.so)
+
+# On ajoute $(PLAYER_SOS) ici pour que 'make' compile tout par défaut
+all: $(TARGET) $(PLAYER_SOS)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+
+# Règle pour compiler les .so des joueurs
+players/%.so: players/%.c
+	$(CC) $(CFLAGS) -fPIC -shared -o $@ $<
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJ_DIR)/*.o $(TARGET)
+	rm -f $(OBJ_DIR)/*.o $(TARGET) players/*.so
