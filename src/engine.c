@@ -6,47 +6,48 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 
-/* Déplacement en x selon l'action */
-static int deplacement_x(Action action)
+/* Déplacement en x selon l'action (conforme aux noms du sujet)  */
+static int deplacement_x(char action)
 {
-    if (action == ACTION_DEPLACER_DROITE ||
-        action == ACTION_DASH_DROITE ||
-        action == ACTION_TELEPORT_DROITE)
+    if (action == ACTION_MOVE_R || 
+        action == ACTION_DASH_R || 
+        action == ACTION_TELEPORT_R)
         return 1;
 
-    if (action == ACTION_DEPLACER_GAUCHE ||
-        action == ACTION_DASH_GAUCHE ||
-        action == ACTION_TELEPORT_GAUCHE)
+    if (action == ACTION_MOVE_L || 
+        action == ACTION_DASH_L || 
+        action == ACTION_TELEPORT_L)
         return -1;
 
     return 0;
 }
 
-/* Déplacement en y selon l'action */
-static int deplacement_y(Action action)
+/* Déplacement en y selon l'action (conforme aux noms du sujet)  */
+static int deplacement_y(char action)
 {
-    if (action == ACTION_DEPLACER_BAS ||
-        action == ACTION_DASH_BAS ||
-        action == ACTION_TELEPORT_BAS)
+    if (action == ACTION_MOVE_D || 
+        action == ACTION_DASH_D || 
+        action == ACTION_TELEPORT_D)
         return 1;
 
-    if (action == ACTION_DEPLACER_HAUT ||
-        action == ACTION_DASH_HAUT ||
-        action == ACTION_TELEPORT_HAUT)
+    if (action == ACTION_MOVE_U || 
+        action == ACTION_DASH_U || 
+        action == ACTION_TELEPORT_U)
         return -1;
 
     return 0;
 }
 
-/* Multiplicateur de déplacement */
-static int multiplicateur(Action action)
+/* Distance de déplacement selon le type d'action  */
+static int distance_action(char action)
 {
-    if (action >= ACTION_DASH_GAUCHE && action <= ACTION_DASH_BAS)
+    // DASH et TELEPORT déplacent de 8 cases 
+    if (action == ACTION_DASH_L || action == ACTION_DASH_R || 
+        action == ACTION_DASH_U || action == ACTION_DASH_D ||
+        action == ACTION_TELEPORT_L || action == ACTION_TELEPORT_R || 
+        action == ACTION_TELEPORT_U || action == ACTION_TELEPORT_D) {
         return 8;
-
-    if (action >= ACTION_TELEPORT_GAUCHE && action <= ACTION_TELEPORT_BAS)
-        return 8;
-
+    }
     return 1;
 }
 
@@ -54,48 +55,54 @@ void lancer_partie(Joueur joueurs[], int nombre_joueurs)
 {
     Grille grille;
     initialiser_grille(&grille);
-
-    /* Initialisation du rendu */
     initialiser_rendu();
 
-    int joueurs_actifs = nombre_joueurs;
+    int actifs = 1;
 
-    while (joueurs_actifs > 0) {
-        joueurs_actifs = 0;
+    // Le jeu s'arrête quand tous les joueurs n'ont plus de crédit 
+    while (actifs > 0) {
+        actifs = 0;
 
         for (int i = 0; i < nombre_joueurs; i++) {
             Joueur *j = &joueurs[i];
 
-            if (j->credits <= 0)
-                continue;
+            if (j->credits <= 0) continue;
 
-            joueurs_actifs++;
+            actifs++;
 
-            Action action = j->get_action();
+            // Appel de la fonction du joueur (doit retourner un char) 
+            char action = j->get_action();
             int cout = cout_action(action);
 
-            if (j->credits < cout)
-                continue;
+            if (j->credits >= cout) {
+                j->credits -= cout;
 
-            j->credits -= cout;
+                int dx = deplacement_x(action);
+                int dy = deplacement_y(action);
+                int dist = distance_action(action);
 
-            int dx = deplacement_x(action);
-            int dy = deplacement_y(action);
-            int mult = multiplicateur(action);
+                for (int d = 0; d < dist; d++) {
+                    // Effet Pacman : retour au côté opposé 
+                    j->x = (j->x + dx + LARGEUR_GRILLE) % LARGEUR_GRILLE;
+                    j->y = (j->y + dy + HAUTEUR_GRILLE) % HAUTEUR_GRILLE;
 
-            j->x = (j->x + dx * mult + LARGEUR_GRILLE) % LARGEUR_GRILLE;
-            j->y = (j->y + dy * mult + HAUTEUR_GRILLE) % HAUTEUR_GRILLE;
-
-            marquer_case(&grille, j->x, j->y, j->id);
+                    // On ne marque les cases intermédiaires que pour MOVE et DASH.
+                    if (action != ACTION_TELEPORT_L && action != ACTION_TELEPORT_R &&
+                        action != ACTION_TELEPORT_U && action != ACTION_TELEPORT_D) {
+                        marquer_case(&grille, j->x, j->y, j->id);
+                    }
+                }
+                
+                // Marquage de la destination finale 
+                marquer_case(&grille, j->x, j->y, j->id);
+            }
         }
 
-        /* Affichage graphique */
         afficher_grille(&grille);
-        SDL_Delay(20);
+        SDL_Delay(10); 
     }
 
-    printf("Partie terminée.\n");
+    printf("Fin de la partie ! \n");
     afficher_scores(&grille, nombre_joueurs);
-
     fermer_rendu();
 }
