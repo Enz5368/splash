@@ -32,6 +32,8 @@ Aucune action.
 
 ``` git clone https://github.com/Enz5368/splash.git ``` 
 
+``` cd splash ```
+
 Prérequis
 
 Le projet nécessite les bibliothèques SDL2 et SDL2_ttf installées sur votre système Linux.
