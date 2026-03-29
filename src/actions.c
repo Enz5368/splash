@@ -1,29 +1,28 @@
 #include "actions.h"
 
-/* Retourne le coût d'une action        */
-int cout_action(Action action)
+int cout_action(char action)
 {
     switch (action) {
-        case ACTION_DEPLACER_GAUCHE:
-        case ACTION_DEPLACER_DROITE:
-        case ACTION_DEPLACER_HAUT:
-        case ACTION_DEPLACER_BAS:
-            return 1;
+        case ACTION_MOVE_L:
+        case ACTION_MOVE_R:
+        case ACTION_MOVE_U:
+        case ACTION_MOVE_D:
+            return 1; // 
 
-        case ACTION_DASH_GAUCHE:
-        case ACTION_DASH_DROITE:
-        case ACTION_DASH_HAUT:
-        case ACTION_DASH_BAS:
-            return 10;
+        case ACTION_DASH_L:
+        case ACTION_DASH_R:
+        case ACTION_DASH_U:
+        case ACTION_DASH_D:
+            return 10; // 
 
-        case ACTION_TELEPORT_GAUCHE:
-        case ACTION_TELEPORT_DROITE:
-        case ACTION_TELEPORT_HAUT:
-        case ACTION_TELEPORT_BAS:
-            return 2;
+        case ACTION_TELEPORT_L:
+        case ACTION_TELEPORT_R:
+        case ACTION_TELEPORT_U:
+        case ACTION_TELEPORT_D:
+            return 2; // 
 
-        case ACTION_IMMOBILE:
+        case ACTION_STILL:
         default:
-            return 1;
+            return 1; // 
     }
 }

@@ -3,15 +3,14 @@
 
 #include "actions.h"
 
-/* Fonction exportée par les joueurs IA (.so) */
-typedef Action (*fonction_action_t)(void);
+/* Correction : Le sujet impose char comme type de retour */
+typedef char (*fonction_action_t)(void);
 
-/* Structure joueur côté moteur */
 typedef struct {
     int id;
     int x;
     int y;
-    int credits;
+    int credits; // Doit être initialisé à 9000 
     int couleur;
 
     fonction_action_t get_action;
