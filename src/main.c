@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h> 
 
 int main(int argc, char *argv[])
 {
@@ -44,12 +45,18 @@ int main(int argc, char *argv[])
     int nombre_joueurs = argc - 1;
     Joueur joueurs[MAX_JOUEURS];
 
+    /* 1. ON NETTOIE LA MÉMOIRE (Évite les bugs de timers et bombes fantômes) */
+    memset(joueurs, 0, sizeof(joueurs));
+
     for (int i = 0; i < nombre_joueurs; i++) {
         joueurs[i].id = i;
         joueurs[i].x = i * 10;
         joueurs[i].y = i * 10;
         joueurs[i].credits = CREDITS_INITIAUX;
         joueurs[i].couleur = i;
+        
+        /* 2. ON INITIALISE LE MULTIPLICATEUR A 1 (Sinon les coups sont gratuits !) */
+        joueurs[i].multiplicateur_cout = 1;
 
         if (charger_joueur(argv[i + 1], &joueurs[i]) != 0) {
             fprintf(stderr, "Erreur chargement joueur %d\n", i);

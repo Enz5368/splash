@@ -51,6 +51,25 @@ static int distance_action(char action)
     return 1;
 }
 
+static int trouver_ennemi_proche(Joueur joueurs[], int nb_joueurs, int id_joueur_actif) {
+    int cible = -1;
+    double dist_min = 10000.0;
+    Joueur *actuel = &joueurs[id_joueur_actif];
+
+    for (int i = 0; i < nb_joueurs; i++) {
+        if (i == id_joueur_actif) continue;
+        
+        // Distance euclidienne (simplifiée pour une grille 100x100)
+        double d = (joueurs[i].x - actuel->x)*(joueurs[i].x - actuel->x) + 
+                   (joueurs[i].y - actuel->y)*(joueurs[i].y - actuel->y);
+        if (d < dist_min) {
+            dist_min = d;
+            cible = i;
+        }
+    }
+    return cible;
+}
+
 void lancer_partie(Joueur joueurs[], int nombre_joueurs)
 {
     Grille grille;
@@ -66,35 +85,136 @@ void lancer_partie(Joueur joueurs[], int nombre_joueurs)
         for (int i = 0; i < nombre_joueurs; i++) {
             Joueur *j = &joueurs[i];
 
+            // CRUCIAL : On ignore les joueurs morts, on incrémente les vivants
             if (j->credits <= 0) continue;
-
             actifs++;
 
-            // Appel de la fonction du joueur (doit retourner un char) 
+            // 1. Gestion des Timers d'effets
+            if (j->timer_mute > 0) j->timer_mute--;
+            if (j->timer_swap > 0) j->timer_swap--;
+            if (j->fork_active_timer > 0) {
+                j->fork_active_timer--;
+                if (j->fork_active_timer == 0) j->multiplicateur_cout = 1; 
+            }
+
+            // 2. Gestion de l'explosion des bombes
+            if (j->bombe_posee) {
+                j->bombe_timer--;
+                if (j->bombe_timer == 0) {
+                    // Explosion 3x3
+                    for(int bx = -1; bx <= 1; bx++) {
+                        for(int by = -1; by <= 1; by++) {
+                            marquer_case(&grille, (j->bombe_x + bx + LARGEUR_GRILLE)%LARGEUR_GRILLE, 
+                                                  (j->bombe_y + by + HAUTEUR_GRILLE)%HAUTEUR_GRILLE, j->id);
+                        }
+                    }
+                    j->bombe_posee = false;
+                }
+            }
+            
+            // 3. Exécution de l'action
             char action = j->get_action();
-            int cout = cout_action(action);
+            int cout = cout_action(action, j->multiplicateur_cout);
 
-            if (j->credits >= cout) {
-                j->credits -= cout;
+            // Sécurité anti-freeze : Si le joueur n'a pas les moyens, il passe son tour
+            if (j->credits < cout) {
+                action = ACTION_STILL;
+                cout = cout_action(action, j->multiplicateur_cout);
+            }
 
-                int dx = deplacement_x(action);
-                int dy = deplacement_y(action);
-                int dist = distance_action(action);
+            // On déduit l'argent et on joue
+            j->credits -= cout;
+            
+            int dx = deplacement_x(action);
+            int dy = deplacement_y(action);
+            int dist = distance_action(action);
 
+            // --- GESTION DES COULEURS (MUTE / SWAP) ---
+            int id_a_marquer = j->id;
+            if (j->timer_mute > 0) {
+                id_a_marquer = -1; // Noir
+            } else if (j->timer_swap > 0) {
+                id_a_marquer = j->id_beneficiaire_swap; // Ennemi
+            }
+
+            // --- DÉPLACEMENT DU JOUEUR ORIGINAL ---
+            for (int d = 0; d < dist; d++) {
+                j->x = (j->x + dx + LARGEUR_GRILLE) % LARGEUR_GRILLE;
+                j->y = (j->y + dy + HAUTEUR_GRILLE) % HAUTEUR_GRILLE;
+
+                if (action != ACTION_TELEPORT_L && action != ACTION_TELEPORT_R &&
+                    action != ACTION_TELEPORT_U && action != ACTION_TELEPORT_D) {
+                    marquer_case(&grille, j->x, j->y, id_a_marquer);
+                }
+            }
+            marquer_case(&grille, j->x, j->y, id_a_marquer);
+
+            // --- DÉPLACEMENT DU CLONE (FORK) ---
+            if (j->fork_en_attente) {
+                j->fork_delay_timer--;
+                if (j->fork_delay_timer <= 0) {
+                    j->fork_en_attente = false;
+                }
+            } else if (j->fork_active_timer > 0) {
                 for (int d = 0; d < dist; d++) {
-                    // Effet Pacman : retour au côté opposé 
-                    j->x = (j->x + dx + LARGEUR_GRILLE) % LARGEUR_GRILLE;
-                    j->y = (j->y + dy + HAUTEUR_GRILLE) % HAUTEUR_GRILLE;
+                    j->fork_x = (j->fork_x + dx + LARGEUR_GRILLE) % LARGEUR_GRILLE;
+                    j->fork_y = (j->fork_y + dy + HAUTEUR_GRILLE) % HAUTEUR_GRILLE;
 
-                    // On ne marque les cases intermédiaires que pour MOVE et DASH.
                     if (action != ACTION_TELEPORT_L && action != ACTION_TELEPORT_R &&
                         action != ACTION_TELEPORT_U && action != ACTION_TELEPORT_D) {
-                        marquer_case(&grille, j->x, j->y, j->id);
+                        marquer_case(&grille, j->fork_x, j->fork_y, id_a_marquer);
                     }
                 }
-                
-                // Marquage de la destination finale 
-                marquer_case(&grille, j->x, j->y, j->id);
+                marquer_case(&grille, j->fork_x, j->fork_y, id_a_marquer);
+            }
+            
+            // --- SWITCH DES CAPACITÉS SPÉCIALES ---
+            switch(action) {
+                case ACTION_BOMB:
+                    if (!j->bombe_posee) {
+                        j->bombe_posee = true;
+                        j->bombe_timer = 5; 
+                        j->bombe_x = j->x;
+                        j->bombe_y = j->y;
+                    }
+                    break;
+
+                case ACTION_CLEAN:
+                    for(int cx = -3; cx <= 3; cx++) {
+                        for(int cy = -3; cy <= 3; cy++) {
+                            marquer_case(&grille, (j->x + cx + LARGEUR_GRILLE)%LARGEUR_GRILLE, 
+                                                (j->y + cy + HAUTEUR_GRILLE)%HAUTEUR_GRILLE, -1);
+                        }
+                    }
+                    break;
+
+                case ACTION_MUTE: {
+                    int cible_m = trouver_ennemi_proche(joueurs, nombre_joueurs, i);
+                    if (cible_m != -1) {
+                        joueurs[cible_m].timer_mute += 10; 
+                        joueurs[cible_m].timer_swap = 0; 
+                    }
+                } break;
+
+                case ACTION_SWAP: {
+                    int cible_s = trouver_ennemi_proche(joueurs, nombre_joueurs, i);
+                    if (cible_s != -1) {
+                        joueurs[cible_s].timer_swap += 5; 
+                        joueurs[cible_s].timer_mute = 0; 
+                        joueurs[cible_s].id_beneficiaire_swap = j->id;
+                    }
+                } break;
+
+                case ACTION_FORK:
+                    if (j->fork_active_timer <= 0 && !j->fork_en_attente) {
+                        j->fork_en_attente = true;
+                        j->fork_delay_timer = 5;
+                        j->fork_active_timer = 20;
+                        j->fork_x = j->x; 
+                        j->fork_y = j->y;
+                        j->multiplicateur_cout = 2;
+                    }
+                    break;
             }
         }
 
