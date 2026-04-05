@@ -2,18 +2,35 @@
 #define PLAYER_H
 
 #include "actions.h"
+#include <stdbool.h>
 
-/* Correction : Le sujet impose char comme type de retour */
 typedef char (*fonction_action_t)(void);
 
 typedef struct {
     int id;
-    int x;
-    int y;
-    int credits; // Doit être initialisé à 9000 
+    int x, y;
+    int credits;
     int couleur;
-
     fonction_action_t get_action;
+
+    // --- Addendum : États ---
+    int multiplicateur_cout; 
+    int timer_mute;          
+    int timer_swap;          
+    int id_beneficiaire_swap; 
+
+    // --- Addendum : Clone (Fork) ---
+    bool fork_en_attente;   
+    int fork_delay_timer;    
+    int fork_active_timer;   
+    int fork_x, fork_y;     
+
+    // --- Addendum : Bombe ---
+    bool bombe_posee;       
+    int bombe_timer;        
+    int bombe_x, bombe_y;    
+
+    
 } Joueur;
 
 #endif
