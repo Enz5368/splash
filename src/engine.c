@@ -113,7 +113,20 @@ void lancer_partie(Joueur joueurs[], int nombre_joueurs)
             }
             
             // 3. Exécution de l'action
-            char action = j->get_action();
+            char action = ACTION_STILL; // Sécurité par défaut
+
+            if (j->is_txt) {
+                if (j->nb_actions_txt > 0) {
+                    // Lit le tableau en boucle 
+                    action = j->actions_txt[j->index_action_txt];
+                    j->index_action_txt = (j->index_action_txt + 1) % j->nb_actions_txt;
+                }
+            } else if (j->get_action != NULL) {
+                // Appel standard pour les .so
+                action = j->get_action();
+            }
+            
+            
             int cout = cout_action(action, j->multiplicateur_cout);
 
             // Sécurité anti-freeze : Si le joueur n'a pas les moyens, il passe son tour

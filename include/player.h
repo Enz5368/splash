@@ -30,6 +30,11 @@ typedef struct {
     int bombe_timer;        
     int bombe_x, bombe_y;    
 
+    // --- Addendum : Fichier Texte ---
+    bool is_txt;
+    char actions_txt[256];   // Stocke la liste des actions lues 
+    int nb_actions_txt;
+    int index_action_txt;
     
 } Joueur;
 

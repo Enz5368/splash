@@ -28,6 +28,27 @@ ACTION_STILL
 Coûts : 1   
 Aucune action.
 
+ACTION_BOMB
+Coûts : 9 
+Place une bombe qui marque 9 cases (3x3) et se déclenche après 5 tours.
+
+ACTION_FORK
+Coûts : 0 
+Crée un clone du joueur pour 20 tours. Le clone démarre à la position où l'action a été jouée, 5 tours après. 
+Pendant ces 20 tours, les coûts des actions du joueur original sont doublés.
+
+ACTION_CLEAN
+Coûts : 40 
+Nettoie (remet au noir) un carré de 7x7 cases autour du joueur. 
+
+ACTION_MUTE
+Coûts : 30 
+Pendant 10 tours, l'ennemi le plus proche continuera de se déplacer mais coloriera les cases en noir. 
+
+ACTION_SWAP
+Coûts : 35 
+Pendant 5 tours, l'ennemi le plus proche continuera de se déplacer mais coloriera les cases de votre couleur
+
 ## 🛠️ Installation et Compilation
 
 ``` git clone https://github.com/Enz5368/splash.git ``` 
