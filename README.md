@@ -71,7 +71,7 @@ Pour compiler le moteur de jeu (splash) et l'ensemble des joueurs présents dans
 
 ## 🚀 Lancement
 
-Le programme splash nécessite le chemin vers les 4 fichiers .so des joueurs :
+Le programme splash nécessite le chemin vers les 4 fichiers .so (ou txt) des joueurs :
 
 ```./splash players/random_player.so players/random_player1.so players/random_player2.so players/random_player3.so```
 
@@ -87,6 +87,11 @@ Elle doit renvoyer un code action défini dans actions.h. Pour compiler manuelle
 
 ```gcc -Wall -Wextra -fPIC -shared -Iinclude -o players/mon_ia.so players/mon_ia.c```
 
+Fichier Texte (.txt)
+
+Un joueur peut également être un simple fichier texte. Ce fichier doit contenir une liste d'actions séparées par des virgules. Les actions seront lues et exécutées en boucle.
+Exemple de contenu pour un fichier test.txt :
+```ACTION_DASH_U, ACTION_BOMB, ACTION_MOVE_D, ACTION_TELEPORT_L```
 
 ## 📁 Structure du projet
 
